@@ -153,6 +153,7 @@ El sistema valida los siguientes campos del cuerpo (`BodySendMailRequest`):
 
 ---
 
-## Nota Este proyecto se basa en el código compartido por el profesor José Galdamez en el curso [Next.js framework de producción para ReactJS](https://www.udemy.com/course/next-js-framework-de-produccion-para-reactjs/). El repositorio original está disponible en [send-mails-api-next-js](https://github.com/JoseGaldamez/send-mails-api-next-js). 
+## Nota 
+Este proyecto se basa en el código compartido por el profesor José Galdamez en el curso [Next.js framework de producción para ReactJS](https://www.udemy.com/course/next-js-framework-de-produccion-para-reactjs/). El repositorio original está disponible en [send-mails-api-next-js](https://github.com/JoseGaldamez/send-mails-api-next-js). 
 
 He realizado pruebas y personalizaciones adicionales con fines educativos y de práctica personal.
