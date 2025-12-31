@@ -1,36 +1,162 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Proyecto de Envío de Correos con Next.js + Nodemailer
 
-## Getting Started
+Este proyecto implementa un sistema de envío de correos electrónicos utilizando **Next.js 15.x** en el frontend y **Nodemailer** en el backend.  
+Incluye validaciones de formato y campos requeridos, así como soporte para direcciones de correo en formato simple o combinado.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Estructura del proyecto
+
+```
+src/
+ ├── app/
+ │    └── api/
+ │         └── sendEmail/
+ │              ├── route.ts        # Endpoint POST para envío de correos
+ │              └── validator.ts    # Validaciones de los campos del request
+ ├── models/
+ │    └── bodySendMailRequest.model.ts  # Modelo del cuerpo de la petición
+ ├── services/
+ │    └── sendEmails/
+ │         └── sendEmail.service.ts     # Servicio que usa Nodemailer
+ └── utils/
+      └── email.utils.ts                # Funciones auxiliares (ej. extractEmail)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Archivos raíz relevantes:
+- `.env` → Variables de entorno (credenciales y configuración SMTP).
+- `next.config.ts` → Configuración de Next.js.
+- `package.json` → Dependencias del proyecto.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Configuración inicial
 
-## Learn More
+1. **Clonar el repositorio**  
+   ```bash
+   git clone <url-del-repo>
+   cd <nombre-del-proyecto>
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. **Instalar dependencias**  
+   ```bash
+   npm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. **Configurar variables de entorno**  
+   Crear un archivo `.env` en la raíz con las siguientes variables:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   ```env
+   EMAIL_HOST=smtp.gmail.com
+   EMAIL_PORT=587
+   EMAIL_USER=tu-cuenta@gmail.com
+   EMAIL_PASSWORD=tu-password-o-app-password
+   ```
 
-## Deploy on Vercel
+   > Importante: Gmail requiere **App Passwords** si tienes activada la verificación en dos pasos.
+   > Si alguna variable de entorno (EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASSWORD) no está definida, 
+   el servicio de envío fallará.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+4. **Ejecutar el proyecto**  
+   ```bash
+   npm run dev
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## Formato del campo `to`
+
+El campo **`to`** admite dos formatos:
+
+- **Texto simple (solo email):**
+  ```json
+  {
+    "to": "destinatario@example.com"
+  }
+  ```
+
+- **Texto combinado (nombre + email entre <>):**
+  ```json
+  {
+    "to": "Juan Pérez <destinatario@example.com>"
+  }
+  ```
+
+Ambos formatos son válidos y se procesan correctamente gracias a la función `extractEmail`.
+
+---
+
+## Validaciones implementadas
+
+El sistema valida los siguientes campos del cuerpo (`BodySendMailRequest`):
+
+- **from (remitente):**
+  - No puede estar vacío.
+  - Debe contener un email válido (ej. `remitente@example.com` o `Nombre <remitente@example.com>`).
+  - Mensajes de error posibles:
+    - `"El remitente es requerido."`
+    - `"Formato de email de remitente incorrecto."`
+
+- **to (destinatario):**
+  - No puede estar vacío.
+  - Debe contener un email válido (ej. `destinatario@example.com` o `Nombre <destinatario@example.com>`).
+  - Mensajes de error posibles:
+    - `"El email de destino es requerido."`
+    - `"Formato de email de destino incorrecto."`
+
+- **subject (asunto):**
+  - No puede estar vacío.
+  - Mensaje de error: `"El asunto es requerido."`
+
+- **content (mensaje):**
+  - No puede estar vacío.
+  - Mensaje de error: `"El mensaje es requerido."`
+
+---
+
+## Consideraciones importantes
+
+- El proyecto usa **Nodemailer** con servidor SMTP de Gmail.  
+  Para otros proveedores, basta con cambiar `EMAIL_HOST` y `EMAIL_PORT` en `.env`.
+
+- Nunca subas tu archivo `.env` al repositorio.  
+  Asegúrate de que `.gitignore` incluya `.env`.
+
+- Los errores de validación se devuelven al frontend con mensajes específicos, por ejemplo:
+  - `"El remitente es requerido."`
+  - `"Formato de email de destino incorrecto."`
+
+- En caso de error del servidor SMTP, el mensaje de error se propaga al frontend.
+
+---
+
+## Ejemplo de flujo
+
+1. Usuario completa el formulario en `page.tsx`.  
+2. Se envía un `POST` a `/api/sendEmail` con el cuerpo:
+
+   ```json
+   {
+     "from": "Remitente <remitente@example.com>",
+     "to": "Destinatario <destinatario@example.com>",
+     "subject": "Prueba de envío",
+     "content": "Este es un mensaje de prueba."
+   }
+   ```
+
+3. El backend valida los campos.  
+4. Si todo es correcto, se envía el correo y se devuelve:
+
+   ```json
+   { "success": true, "message": "Email enviado con éxito" }
+   ```
+
+---
+
+## Licencia
+
+Este proyecto se distribuye bajo licencia MIT.  
+Puedes usarlo y adaptarlo libremente para tus necesidades.
+```
+
+---
